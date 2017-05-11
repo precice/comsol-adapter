@@ -1,11 +1,11 @@
-#preCICE-adapter for the FEM code COMSOL Multi-Physics
+# preCICE-adapter for the FEM code COMSOL Multi-Physics
 
 This folder contains files to use Comsol as structural solver in an FSI simulation.
 Since it was not possible to directly couple the C++ coded preCICE to the Comsol
-API, we used FSI*ce as intermediate communication/data library. There are, hence,
+API, we used FSI\*ce as intermediate communication/data library. There are, hence,
 two important files: comsol_simulation.c interfaces with the Comsol API and uses
-FSI*ce to communicate the data to the intermediate (executable) component 
-ComsolPrecice.c. ComsolPrecice uses FSI*ce to exchange data with 
+FSI\*ce to communicate the data to the intermediate (executable) component 
+ComsolPrecice.c. ComsolPrecice uses FSI\*ce to exchange data with 
 comsol_simulation, and preCICE for the actual coupling.
 
 Only 2D simulations have been done so far. For 3D, several changes to 
@@ -13,7 +13,7 @@ comsol_simulation.c and some to ComsolPrecice.c have to be done.
 
 
 
-##How to compile the files?
+## How to compile the files?
 
 The compilation is done by SCons, check the SConstruct script for detailed 
 information on the build variables. There is a debug and a release mode.
@@ -27,7 +27,7 @@ the pathes to the FSI*ce libraries and the preCICE library.
 
 
 
-##How to run Comsol for and FSI simulation?
+## How to run Comsol for and FSI simulation?
 
 There are two executables to be run (in any order). Comsol script needs to be 
 run as follows

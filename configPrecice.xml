@@ -33,7 +33,8 @@
 
       <geometry name="channel" id="0" type="builtin-cuboid" volume="outside">  
          <discretization-width value="1.0" />
-         <offset value0="0.0" value1="1.64" />          <length value0="2.46" value1= "0.41" />
+         <offset value0="0.0" value1="1.64" /> 
+         <length value0="2.46" value1= "0.41" />
          <sub-id side="1" id="2" />
          <sub-id side="2" id="1" />
          <sub-id side="3" id="3" />          
@@ -46,11 +47,13 @@
          <use-data name="Velocities" />
 	      <use-data name="Displacements" />
       </geometry>
-                        
+            
+            
       <participant name="Peano">
          <use-geometry name="channel" />
          <use-geometry name="Geometry" offset0="1.0" offset1="1.84"/>
-         <plot directory="peano-output/" />         <write-data name="Forces" mapping="linear-conservative" />
+         <plot directory="peano-output/" />
+         <write-data name="Forces" mapping="linear-conservative" />
          <read-data name="Velocities" mapping="linear-consistent" />
 	      <read-data name="Displacements" mapping="direct" />
 	      <read-action data="Displacements" type="set-as-displacement" />
@@ -58,7 +61,7 @@
       
       <participant name="Comsol">
          <use-geometry name="Geometry" />
-         <plot timestep-interval="10" />
+         <plot every-n-time-windows="10" />
          <write-data name="Velocities" mapping="direct" />
 	      <write-data name="Displacements" mapping="direct" />
          <read-data name="Forces" mapping="direct" />
@@ -74,8 +77,8 @@
 		   <first-participant name="Peano" />
 		   <second-participant name="Comsol" />
 	      <communication type="mpi-run-separated" />
-		   <max-timesteps value="1040" />	
-		   <timestep-length value="1e-4" />
+		   <max-time-windows value="1040" />	
+		   <time-window-size value="1e-4" />
 	      <exchange-data name="Velocities" from-participant="Comsol" />
 	      <exchange-data name="Forces" from-participant="Peano" />
 	      <exchange-data name="Displacements" from-participant="Comsol" />

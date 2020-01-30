@@ -238,7 +238,7 @@ int main(int argc, char** argv)
                           // will a checkpoint loaded
   if (precicec_isActionRequired(precicec_actionReadSimulationCheckpoint())){
     checkpointNumber = 1;
-    precicec_fulfilledAction(precicec_actionReadSimulationCheckpoint());
+    precicec_markActionFulfilled(precicec_actionReadSimulationCheckpoint());
   }
   FSI_Send_int_through_socket(socketToComsol, &checkpointNumber);
 
@@ -319,11 +319,11 @@ int main(int argc, char** argv)
   while (precicec_isCouplingOngoing() > 0){
     iterationNumber++;
 	  if (precicec_isActionRequired("write-iteration-checkpoint")){
-      precicec_fulfilledAction("write-iteration-checkpoint");
+      precicec_markActionFulfilled("write-iteration-checkpoint");
 	  }
 	  if (precicec_isActionRequired("read-iteration-checkpoint")){
 		  redoStep = 1; /* repeat the timestep */
-	    precicec_fulfilledAction("read-iteration-checkpoint");
+	    precicec_markActionFulfilled("read-iteration-checkpoint");
 	  }
 	  else {
 	    redoStep = 0; /* do not repeat the timestep */
@@ -371,7 +371,7 @@ int main(int argc, char** argv)
     checkpointNumber = -1;
     if (precicec_isActionRequired(precicec_actionWriteSimulationCheckpoint())){
       checkpointNumber = 1;
-      precicec_fulfilledAction(precicec_actionWriteSimulationCheckpoint());
+      precicec_markActionFulfilled(precicec_actionWriteSimulationCheckpoint());
     }
     FSI_Send_int_through_socket(socketToComsol , &checkpointNumber);
   }
@@ -381,7 +381,7 @@ int main(int argc, char** argv)
 //  checkpointNumber = -1;
 //  if (precicec_isActionRequired(precicec_actionWriteSimulationCheckpoint())){
 //    checkpointNumber = 1;
-//    precicec_fulfilledAction(precicec_actionWriteSimulationCheckpoint());
+//    precicec_markActionFulfilled(precicec_actionWriteSimulationCheckpoint());
 //  }
 //  FSI_Send_int_through_socket(socketToComsol , &checkpointNumber);
 

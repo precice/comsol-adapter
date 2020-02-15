@@ -1,89 +1,62 @@
 <?xml version="1.0"?>
 
-<!--
-   - This runs a fluid simulation 
-   - on a 2D regular Cartesian grid (trivialgrid).
-   - (C) 2008 Tobias Neckel
-   -->
 <precice-configuration>
    
-   <!--
-      Switches debug output from different components on / off. If no switch is
-      defined for a component in Debug mode, the default is on, i.e. the filter
-      works with a black list.
-      -->
-   
-   <log-filter target="debug" component="parallel" switch="off" />
-   <log-filter target="debug" component="grid"     rank="*" switch="off" />
-   <log-filter target="debug" component="trivialgrid"   switch="off" />
-   <log-filter target="debug" component="geometry" switch="off" />
-   <log-filter target="debug" component="output"   switch="on" />
-   <log-filter target="debug" component="scenario"   switch="off" />
-   <log-filter target="debug" component="stacks"   switch="off" />
-   <log-filter target="debug" component="pegsi"    switch="off" />
-   <log-filter target="debug" component="fluid"    switch="off" />
-   <log-filter target="debug" component="precice"  switch="on" />
-   
-   
-   <coupling-interface>
+   <solver-interface dimensions="2">
             
-      <data name="Forces" type="vector" />
-      <data name="Velocities" type="vector" />
-      <data name="Displacements" type="vector" />
+      <data:vector name="Forces"/>
+      <data:vector name="Velocities"/>
+      <data:vector name="Displacements"/>
+      
+      <mesh name="Comsol-Mesh">
+         <use-data name="Displacements"/>
+         <use-data name="Velocities"/>
+         <use-data name="Forces"/>
+      </mesh>
 
-      <geometry name="channel" id="0" type="builtin-cuboid" volume="outside">  
-         <discretization-width value="1.0" />
-         <offset value0="0.0" value1="1.64" /> 
-         <length value0="2.46" value1= "0.41" />
-         <sub-id side="1" id="2" />
-         <sub-id side="2" id="1" />
-         <sub-id side="3" id="3" />          
-      </geometry>
-                          
-      <geometry name="Geometry" id="4" type="solver" volume="inside"> 
-         <discretization-width value="0.03" /> 
-         <radius value="0.05" />
-         <use-data name="Forces" />
-         <use-data name="Velocities" />
-	      <use-data name="Displacements" />
-      </geometry>
+      <mesh name="FluidSolver-Mesh">
+         <use-data name="Displacements"/>
+         <use-data name="Velocities"/>
+         <use-data name="Forces"/>
+      </mesh>
             
-            
-      <participant name="Peano">
-         <use-geometry name="channel" />
-         <use-geometry name="Geometry" offset0="1.0" offset1="1.84"/>
-         <plot directory="peano-output/" />
-         <write-data name="Forces" mapping="linear-conservative" />
-         <read-data name="Velocities" mapping="linear-consistent" />
-	      <read-data name="Displacements" mapping="direct" />
-	      <read-action data="Displacements" type="set-as-displacement" />
+      <participant name="FluidSolver">
+         <use-mesh name="Comsol-Mesh" from="Comsol"/>
+         <use-mesh name="FluidSolver-Mesh" provide="yes"/>
+         <write-data name="Forces" mesh="FluidSolver-Mesh"/>
+         <read-data name="Displacements" mesh="FluidSolver-Mesh"/>
+         <read-data name="Velocities" mesh="FluidSolver-Mesh"/>
+         <mapping:nearest-neighbor direction="write" from="FluidSolver-Mesh" to="Comsol-Mesh" constraint="conservative"/>
+         <mapping:nearest-neighbor direction="read" from="Comsol-Mesh" to="FluidSolver-Mesh" constraint="consistent"/>
       </participant>      
       
       <participant name="Comsol">
-         <use-geometry name="Geometry" />
-         <plot every-n-time-windows="10" />
-         <write-data name="Velocities" mapping="direct" />
-	      <write-data name="Displacements" mapping="direct" />
-         <read-data name="Forces" mapping="direct" />
-	      <read-action data="Forces" type="divide-by-area" />
+         <use-mesh name="Comsol-Mesh" provide="yes"/>
+         <write-data name="Displacements" mesh="Comsol-Mesh"/>
+         <write-data name="Velocities" mesh="Comsol-Mesh"/>
+         <read-data name="Forces" mesh="Comsol-Mesh"/>
       </participant>
 
-      <geometry-hub provider="Comsol" geometry="Geometry">
-        <receiver name="Peano" communication="mpi-run-separated">
-      </geometry-hub>
-
-
-      <coupling-scheme type="implicit">
-		   <first-participant name="Peano" />
-		   <second-participant name="Comsol" />
-	      <communication type="mpi-run-separated" />
-		   <max-time-windows value="1040" />	
-		   <time-window-size value="1e-4" />
-	      <exchange-data name="Velocities" from-participant="Comsol" />
-	      <exchange-data name="Forces" from-participant="Peano" />
-	      <exchange-data name="Displacements" from-participant="Comsol" />
-         <convergence-limit value="1e-1" />
-      </coupling-scheme>
+      <m2n:sockets from="FluidSolver" to="Comsol"/>
+      
+      <coupling-scheme:serial-implicit>
+         <participants first="FluidSolver" second="Comsol"/>
+         <max-time-windows value="1"/>
+         <time-window-size value="1e-2"/> 
+         <exchange data="Forces" mesh="Comsol-Mesh" from="FluidSolver" to="Comsol"/> 
+         <exchange data="Displacements" mesh="Comsol-Mesh" from="Comsol" to="FluidSolver"/>
+         <exchange data="Velocities" mesh="Comsol-Mesh" from="Comsol" to="FluidSolver"/>
+         <max-iterations value="100"/>
+         <relative-convergence-measure limit="1e-3" data="Displacements" mesh="Comsol-Mesh"/>
+         <relative-convergence-measure limit="1e-3" data="Forces" mesh="Comsol-Mesh"/>
+         <acceleration:IQN-ILS>
+            <data name="Displacements" mesh="Comsol-Mesh"/>
+            <filter type="QR1" limit="1e-6"/>
+            <initial-relaxation value="0.1"/>
+            <max-used-iterations value="80"/>
+            <time-windows-reused value="8"/>
+         </acceleration:IQN-ILS>
+      </coupling-scheme:parallel-implicit>
      
-   </coupling-interface>   
+   </solver-interface>   
 </precice-configuration>  

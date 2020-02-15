@@ -1,5 +1,4 @@
-#include "precice/adapters/c/SolverInterfaceC.h"
-#include "precice/adapters/c/Constants.h"
+#include "precice/SolverInterfaceC.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <rpc/rpc.h>
@@ -14,7 +13,7 @@
 #include "fsi_map-mat.h"
 #include "fsi_interface_socket.h"
 
-// on this socket is the communication between COMSOL and Precise trough FSI
+// on this socket is the communication between COMSOL and preCICE trough FSI*ce
 #define COMMUNICATION_SOCKET       53219
 #define HOSTNAME                  "localhost"
 #define MAX_NR_POINTS              10000
@@ -62,6 +61,7 @@ void readForces
     for ( i=1; i < FSI_Mesh_get_num_nodes(mesh); i++ ) {
       coords[0] = FSI_Mesh_get_node_x ( mesh, i );
       coords[1] = FSI_Mesh_get_node_y ( mesh, i );
+      //@todo replace hard-coded vertexIDs "i-1" with the ones received from the mesh definition
       precicec_readVectorData ( dataID, i-1, value );
       FSI_Data_set_vector ( data, i, value[0], value[1], 0.0 );
     }
@@ -71,6 +71,7 @@ void readForces
       coords[0] = FSI_Mesh_get_node_x ( mesh , i );
       coords[1] = FSI_Mesh_get_node_y ( mesh, i );
       coords[2] = FSI_Mesh_get_node_z ( mesh, i );
+      //@todo replace hard-coded vertexIDs "i-1" with the ones received from the mesh definition
       precicec_readVectorData ( dataID, i-1, value );
       FSI_Data_set_vector ( data, i, value[0], value[1], value[2] );
     }
@@ -98,6 +99,7 @@ void writePreciceData
       value[1] = FSI_Data_get_value ( data, i, 2 );
       fprintf ( fd, "Set value %d = %e,%e at coords = %e, %e\n",
                 i, value[0], value[1], coords[0], coords[1] );
+      //@todo replace hard-coded vertexIDs "i-1" with the ones received from the mesh definition          
       precicec_writeVectorData ( dataID, i-1, value );
     }
   }
@@ -111,82 +113,12 @@ void writePreciceData
       value[2] = FSI_Data_get_value ( data, i, 3 );
       fprintf ( fd, "Set value %d = %e,%e, %e at coords = %e, %e, %e\n",
                 i, value[0], value[1], value[2], coords[0], coords[1], coords[2] );
+      //@todo replace hard-coded vertexIDs "i-1" with the ones received from the mesh definition
       precicec_writeVectorData ( dataID, i-1, value );
     }
   }
 }
 
-//void writeVelocities
-//(
-//  FSI_Mesh * mesh,
-//  FSI_Data * data )
-//{
-//  int i;
-//  double coords[2]
-//  double value[2];
-//
-//  for ( i=1; i < FSI_Mesh_get_num_nodes(mesh_tmp); i++ ) {
-//    coords[0] = FSI_Mesh_get_node_x ( mesh, i );
-//    coords[1] = FSI_Mesh_get_node_y ( mesh, i );
-//    value[0] = FSI_Data_get_value ( data, i, 1 );
-//    value[1] = FSI_Data_get_value ( data, i, 2 );
-//    fprintf ( fd, "Set value(velocity): %d : %e,%e with: %e,%e \n",
-//              i, coords[0], coords[1], value[0], value[1] );
-//    precicec_writeVectorData ( velocityID, coords, value );
-//  }
-//}
-//
-//void writeVelocityDeltas
-//(
-//  FSI_Mesh * mesh,
-//  FSI_Data * data )
-//{
-//   int i;
-//   double coords[2];
-//   double velDelta[2];
-//
-//   for ( i=1; i < FSI_Mesh_get_num_nodes(mesh); i++ ) {
-//     coords[0] = FSI_Mesh_get_node_x ( mesh, i );
-//     coords[1] = FSI_Mesh_get_node_y ( mesh, i );
-//     velDelta[0] = FSI_Data_get_value ( data, i, 1 );
-//     velDelta[1] = FSI_Data_get_value ( data, i, 2 );
-//     fprintf ( fd,"Setting velocity delta: %d : %e,%e with: %e,%e \n",
-//               i, coords[0], coords[1], velDelta[0], velDelta[1] );
-//     precicec_writeVectorData ( velocityDeltaID, coords, velDelta );
-//   }
-//}
-//
-//void writeDisplacements(FSI_Mesh * mesh_tmp , FSI_Data * mesh_data_new_diff , FSI_Data * mesh_data_displacement ){
-//  int i;
-//  double coords[2] , displacement[2];
-//  for (i = 1 ; i < FSI_Mesh_get_num_nodes( mesh_tmp ) ; i++) {
-//    coords[0] = FSI_Mesh_get_node_x( mesh_tmp , i );
-//    coords[1] = FSI_Mesh_get_node_y( mesh_tmp , i );
-////    displacement[0] = FSI_Data_get_value( mesh_data_displacement , i , 1 );
-////    displacement[1] = FSI_Data_get_value( mesh_data_displacement , i , 2 );
-//    displacement[0] = FSI_Data_get_value( mesh_data_new_diff , i , 1 );
-//    displacement[1] = FSI_Data_get_value( mesh_data_new_diff , i , 2 );
-//    fprintf(fd,"Setting displacements: %d : %e,%e with: %e,%e \n",
-//            i ,coords[0] , coords[1] , displacement[0] , displacement[1] );
-//    precicec_writeVectorData ( displacementID, coords , displacement );
-//  }
-//}
-//
-//void writeDisplacementDeltas(FSI_Mesh * mesh_tmp , FSI_Data * mesh_data_new_diff , FSI_Data * mesh_data_displacement ){
-//  int i;
-//  double coords[2] , displacement[2];
-//  for (i = 1 ; i < FSI_Mesh_get_num_nodes( mesh_tmp ) ; i++) {
-//    coords[0] = FSI_Mesh_get_node_x( mesh_tmp , i );
-//    coords[1] = FSI_Mesh_get_node_y( mesh_tmp , i );
-////    displacement[0] = FSI_Data_get_value( mesh_data_displacement , i , 1 );
-////    displacement[1] = FSI_Data_get_value( mesh_data_displacement , i , 2 );
-//    displacement[0] = FSI_Data_get_value( mesh_data_new_diff , i , 1 );
-//    displacement[1] = FSI_Data_get_value( mesh_data_new_diff , i , 2 );
-//    fprintf(fd,"Setting displacements: %d : %e,%e with: %e,%e \n",
-//            i ,coords[0] , coords[1] , displacement[0] , displacement[1] );
-//    precicec_writeVectorData ( displacementID, coords , displacement );
-//  }
-//}
 
 //====================================== MAIN =========================================
 int main(int argc, char** argv)
@@ -198,7 +130,7 @@ int main(int argc, char** argv)
   int fHostPort, sHostPort;
   int nAddressSize = sizeof(struct sockaddr_in);
 	double coords[2], value[2];
-//	int pointNr , trinagleNr;
+//	int pointNr , triangleNr;
 	int i;
   int checkpointNumber;
 	char filename[50];
@@ -230,44 +162,42 @@ int main(int argc, char** argv)
   while(connect(socketToComsol, (struct sockaddr*) &Address, sizeof(Address)) == -1){
     usleep(1000000);
   }
-	printf("Connection with success ... Now recieving Mesh\n"); fflush(stdout);
+	printf("Connection with success ... Now receiving Mesh\n"); fflush(stdout);
 
   // --- send the checkpoint number which should be loaded ---
   checkpointNumber = -1; // -1 means it no checkpoints will be loaded
                           // only when checkpoint_number is greater than 0,
                           // will a checkpoint loaded
-  if (precicec_isActionRequired(precicec_actionReadSimulationCheckpoint())){
-    checkpointNumber = 1;
-    precicec_markActionFulfilled(precicec_actionReadSimulationCheckpoint());
-  }
   FSI_Send_int_through_socket(socketToComsol, &checkpointNumber);
 
   /* GET THE MESH FROM COMSOL AND MAKE INITIALIZATIONS */
-	mesh = FSI_Mesh_new_empty(); /* this initialization is needed !!!! */
+	mesh = FSI_Mesh_new_empty(); /* this initialization is needed */
 	fprintf(fd, "Receiving FSIce mesh ... \n");
 	FSI_Recv_mesh_socket(mesh , socketToComsol);
 
-  fprintf(fd, "Building Precice mesh ... \n");
-  int meshID = precicec_getMeshID("WetSurface");
-//  precicec_createMeshBuilder ( "Geometry" );
-	/* create the vertices in the Precice geometry */
+  fprintf(fd, "Building preCICE mesh ... \n");
+  int meshID = precicec_getMeshID("Comsol-Mesh");
+
+	/* create the vertices */
 	for (i=1; i < FSI_Mesh_get_num_nodes(mesh); i++){
     coords[0] = FSI_Mesh_get_node_x(mesh, i);
     coords[1] = FSI_Mesh_get_node_y(mesh, i);
     fprintf(fd, "Adding vertex with coodrs = %f, %f\n", coords[0], coords[1]);
+    //@todo store index
     int index = precicec_setMeshVertex(meshID, coords);
     fprintf(fd, "   ... returned index = %d\n", index);
 	}
-	/* Create the edges in the geometry */
+	/* Create the edges */
 	for (i=0; i < FSI_Mesh_get_num_triangles(mesh); i++){
 	  fprintf(fd, "Adding edge with vertex indices = %d, %d\n",
 	          FSI_Mesh_get_face_node1(mesh,i)-1, FSI_Mesh_get_face_node2(mesh,i)-1);
+    //@todo replace hard-coded vertexIDs with stored ones
 	  precicec_setMeshEdge(meshID,
                         FSI_Mesh_get_face_node1(mesh,i)-1,
                         FSI_Mesh_get_face_node2(mesh,i)-1);
 	}
 
-  fprintf(fd, "Recieve and create data ...\n");
+  fprintf(fd, "Receive and create data ...\n");
   meshForces = FSI_Mesh_Data_new(mesh, 1, 3, "Forces");
 	FSI_Recv_quantity_socket(mesh, socketToComsol);
   FSI_Recv_quantity_socket(mesh, socketToComsol);
@@ -278,27 +208,22 @@ int main(int argc, char** argv)
   meshVelocities = FSI_Mesh_get_Data(mesh, "Velocities");
   meshVelocityDeltas = FSI_Mesh_get_Data(mesh, "VelocityDeltas");
 
-  //fprintf(fd, "Sending mesh to comsol ...\n");
-  //FSI_Send_quantity_socket(mesh, "Forces", socketToComsol);
-
   printf("Initializing Coupling ... \n"); fflush(stdout);
 	timeStep = precicec_initialize();
 
 	forcesID = precicec_getDataID("Forces");
-	if (precicec_hasData("Velocities")){
-	  velocitiesID = precicec_getDataID("Velocities");
+	if (precicec_hasData("Velocities", meshID)){
+	  velocitiesID = precicec_getDataID("Velocities", meshID);
 	}
-	if (precicec_hasData("VelocityDeltas")){
-	  velocityDeltasID = precicec_getDataID("VelocityDeltas");
+	if (precicec_hasData("VelocityDeltas", meshID)){
+	  velocityDeltasID = precicec_getDataID("VelocityDeltas", meshID);
 	}
-	if (precicec_hasData("Displacements")){
-	  displacementsID = precicec_getDataID("Displacements");
+	if (precicec_hasData("Displacements", meshID)){
+	  displacementsID = precicec_getDataID("Displacements", meshID);
 	}
-	if (precicec_hasData("DisplacementDeltas")){
-	  displacementDeltasID = precicec_getDataID("DisplacementDeltas");
+	if (precicec_hasData("DisplacementDeltas", meshID)){
+	  displacementDeltasID = precicec_getDataID("DisplacementDeltas", meshID);
 	}
-  fprintf(fd, "Exporting precice geometry ...\n");
-  precicec_exportMesh("Precice");
 
   // MAIN TIMESTEPPING LOOP
   //
@@ -365,25 +290,10 @@ int main(int argc, char** argv)
 	  // ------- Exchange data -----------
     fprintf ( fd, "Calling preCICE advance ... \n");
 	  timeStep = precicec_advance(timeStep);
+	  //@todo extend to sub-cycling
 
-    // --- send the checkpoint number where this should be stored ---
-    // if the checkpoint < 1 then no checkpoint will be written
-    checkpointNumber = -1;
-    if (precicec_isActionRequired(precicec_actionWriteSimulationCheckpoint())){
-      checkpointNumber = 1;
-      precicec_markActionFulfilled(precicec_actionWriteSimulationCheckpoint());
-    }
-    FSI_Send_int_through_socket(socketToComsol , &checkpointNumber);
   }
 	fprintf(fd,"Tell COMSOL simulation ended  ... \n");
-  // --- send the checkpoint number where this should be stored ---
-  // if the checkpoint < 1 then no checkpoint will be written
-//  checkpointNumber = -1;
-//  if (precicec_isActionRequired(precicec_actionWriteSimulationCheckpoint())){
-//    checkpointNumber = 1;
-//    precicec_markActionFulfilled(precicec_actionWriteSimulationCheckpoint());
-//  }
-//  FSI_Send_int_through_socket(socketToComsol , &checkpointNumber);
 
 	doStep = 0;
   FSI_Send_int_through_socket ( socketToComsol , &doStep );
